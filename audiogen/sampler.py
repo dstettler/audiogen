@@ -146,7 +146,7 @@ class NonSeekableFileProxy(object):
             return getattr(self.f, attr)
 
 
-def wave_module_patched():
+def wave_module_patched(w):
     '''True if wave module can write data size of 0xFFFFFFFF,
        False otherwise.'''
     f = StringIO()
@@ -179,7 +179,7 @@ def write_wav(f,
         # protect the non-seekable file, since Wave_write will call tell
         f = NonSeekableFileProxy(f)
 
-    w = wave.open(f)
+    w = wave.open(f, "wb")
     w.setparams((
         channel_count,
         sample_width,
@@ -189,16 +189,18 @@ def write_wav(f,
         COMPRESSION_NAME
         ))
 
-    if not output_seekable:
-        if wave_module_patched():
-            # set nframes to make wave module write data size of 0xFFFFFFF
-            w.setnframes((0xFFFFFFFF - 36)
-                         / w.getnchannels() / w.getsampwidth())
-            logger.debug(f"Setting frames to: {w.getnframes()}, {w._nframes}")
-        else:
-            w.setnframes((0x7FFFFFFF - 36)
-                         / w.getnchannels() / w.getsampwidth())
-            logger.debug("Setting frames to: {w.getnframes()}, {w._nframes}")
+    # This breaks compatibility with writing to stdout due to improper, non-integer nframe values
+    # if not output_seekable:
+        # if and wave_module_patched(w):
+        #     # set nframes to make wave module write data size of 0xFFFFFFF
+        #     w.setnframes((0xFFFFFFFF - 36)
+        #                  / w.getnchannels() / w.getsampwidth())
+        #     logger.debug(f"Setting frames to: {w.getnframes()}, {w._nframes}")
+        # else:
+        #     break
+        #     w.setnframes((0x7FFFFFFF - 36)
+        #                  / w.getnchannels() / w.getsampwidth())
+        #     logger.debug("Setting frames to: {w.getnframes()}, {w._nframes}")
 
     for chunk in buffer(stream):
         logger.debug("Writing %d bytes..." % len(chunk))

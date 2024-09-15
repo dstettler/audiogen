@@ -12,7 +12,7 @@ with open("README.rst", "rb") as f:
 
 setup(
     name="audiogen",
-    version="0.2.0",
+    version="0.2.1",
     description="Generator based tools for working with audio clips.",
     author="Christopher H. Casebeer",
     author_email="",
